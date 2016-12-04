@@ -1,4 +1,4 @@
-// find keypoints of image and webcam and try to match them
+﻿// find keypoints of image and webcam and try to match them
 
 #include<opencv2/core/core.hpp>
 #include<opencv2/highgui/highgui.hpp>
@@ -16,8 +16,8 @@ using namespace cv::xfeatures2d;
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main() {
 
-	cv::VideoCapture capWebcam_left(0);            // declare a VideoCapture object and associate to webcam, 0 => use 1st webcam
-	cv::VideoCapture capWebcam_right(1);            // declare a VideoCapture object and associate to webcam, 1 => use 2st webcam
+	cv::VideoCapture capWebcam_left(2);            // declare a VideoCapture object and associate to webcam, 0 => use 1st webcam
+	cv::VideoCapture capWebcam_right(0);            // declare a VideoCapture object and associate to webcam, 1 => use 2st webcam
 
 	if (capWebcam_left.isOpened() == false) {                                // check if VideoCapture object was associated to webcam successfully
 		std::cout << "error: capWebcam not accessed successfully\n\n";      // if not, print error message to std out
@@ -33,9 +33,9 @@ int main() {
 
 	cv::Mat img_left;      
 	cv::Mat img_right;      
-
+	cout << "Press 'c' to capture ..." << endl;
 	char charCheckForEscKey = 0;
-	char choice = 'z';
+	char choice = 'k';
 	int count = 0;
 
 	while ( capWebcam_left.isOpened()&& capWebcam_right.isOpened()) {            // until the Esc key is pressed or webcam connection is lost
@@ -45,6 +45,7 @@ int main() {
 			std::cout << "error: frame not read from webcam\n";                 // print error message to std out
 			break;                                                              // and jump out of while loop
 		}
+		cvtColor(img_left, img_left, CV_BGR2GRAY);
 
 		bool blnFrameReadSuccessfully_right = capWebcam_right.read(img_right);      
 
@@ -52,12 +53,12 @@ int main() {
 			std::cout << "error: frame not read from webcam\n";          
 			break;                                                     
 		}
-
+		cvtColor(img_right, img_right, CV_BGR2GRAY);
 
 		if (choice == 'c') {
 			stringstream l_name, r_name;
-			l_name << "left_" << setw(2) << setfill('0') << count << ".jpg";
-			r_name << "right_" << setw(2) << setfill('0') << count << ".jpg";
+			l_name << "stereo_image/left_" << setw(2) << setfill('0') << count << ".jpg";
+			r_name << "stereo_image/right_" << setw(2) << setfill('0') << count << ".jpg";
 			imwrite(l_name.str(), img_left);
 			imwrite(r_name.str(), img_right);
 			cout << "Saved set " << count << endl;

@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stereo_calib.cpp">
+    <ClCompile Include="surf2image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

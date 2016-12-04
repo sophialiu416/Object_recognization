@@ -25,6 +25,7 @@ static void print_help()
            "[--no-display] [-o=<disparity_image>] [-p=<point_cloud_file>]\n");
 }
 
+
 static void saveXYZ(const char* filename, const Mat& mat)
 {
     const double max_z = 1.0e4;
@@ -41,14 +42,14 @@ static void saveXYZ(const char* filename, const Mat& mat)
     fclose(fp);
 }
 
-int main(int argc, char** argv)
+int main()
 {
-    std::string img1_filename = "";
-    std::string img2_filename = "";
-    std::string intrinsic_filename = "";
-    std::string extrinsic_filename = "";
-    std::string disparity_filename = "";
-    std::string point_cloud_filename = "";
+    std::string img1_filename = "stereo_image/left.jpg";
+    std::string img2_filename = "stereo_image/right.jpg";
+    std::string intrinsic_filename = "stereo_image/intrinsics.yml";
+    std::string extrinsic_filename = "stereo_image/extrinsics.yml";
+    std::string disparity_filename = "stereo_image/disparity_SGBM.png";
+    std::string point_cloud_filename = "stereo_image/cloud_SGBM.asc";
 
     enum { STEREO_BM=0, STEREO_SGBM=1, STEREO_HH=2, STEREO_VAR=3, STEREO_3WAY=4 };
     int alg = STEREO_SGBM;
@@ -56,81 +57,13 @@ int main(int argc, char** argv)
     bool no_display;
     float scale;
 
-    Ptr<StereoBM> bm = StereoBM::create(16,9);
-    Ptr<StereoSGBM> sgbm = StereoSGBM::create(0,16,3);
-    cv::CommandLineParser parser(argc, argv,
-        "{@arg1||}{@arg2||}{help h||}{algorithm||}{max-disparity|0|}{blocksize|0|}{no-display||}{scale|1|}{i||}{e||}{o||}{p||}");
-    if(parser.has("help"))
-    {
-        print_help();
-        return 0;
-    }
-    img1_filename = parser.get<std::string>(0);
-    img2_filename = parser.get<std::string>(1);
-    if (parser.has("algorithm"))
-    {
-        std::string _alg = parser.get<std::string>("algorithm");
-        alg = _alg == "bm" ? STEREO_BM :
-            _alg == "sgbm" ? STEREO_SGBM :
-            _alg == "hh" ? STEREO_HH :
-            _alg == "var" ? STEREO_VAR :
-            _alg == "sgbm3way" ? STEREO_3WAY : -1;
-    }
-    numberOfDisparities = parser.get<int>("max-disparity");
-    SADWindowSize = parser.get<int>("blocksize");
-    scale = parser.get<float>("scale");
-    no_display = parser.has("no-display");
-    if( parser.has("i") )
-        intrinsic_filename = parser.get<std::string>("i");
-    if( parser.has("e") )
-        extrinsic_filename = parser.get<std::string>("e");
-    if( parser.has("o") )
-        disparity_filename = parser.get<std::string>("o");
-    if( parser.has("p") )
-        point_cloud_filename = parser.get<std::string>("p");
-    if (!parser.check())
-    {
-        parser.printErrors();
-        return 1;
-    }
-    if( alg < 0 )
-    {
-        printf("Command-line parameter error: Unknown stereo algorithm\n\n");
-        print_help();
-        return -1;
-    }
-    if ( numberOfDisparities < 1 || numberOfDisparities % 16 != 0 )
-    {
-        printf("Command-line parameter error: The max disparity (--maxdisparity=<...>) must be a positive integer divisible by 16\n");
-        print_help();
-        return -1;
-    }
-    if (scale < 0)
-    {
-        printf("Command-line parameter error: The scale factor (--scale=<...>) must be a positive floating-point number\n");
-        return -1;
-    }
-    if (SADWindowSize < 1 || SADWindowSize % 2 != 1)
-    {
-        printf("Command-line parameter error: The block size (--blocksize=<...>) must be a positive odd number\n");
-        return -1;
-    }
-    if( img1_filename.empty() || img2_filename.empty() )
-    {
-        printf("Command-line parameter error: both left and right images must be specified\n");
-        return -1;
-    }
-    if( (!intrinsic_filename.empty()) ^ (!extrinsic_filename.empty()) )
-    {
-        printf("Command-line parameter error: either both intrinsic and extrinsic parameters must be specified, or none of them (when the stereo pair is already rectified)\n");
-        return -1;
-    }
+	Ptr<StereoBM> bm = StereoBM::create(16, 9);
+	Ptr<StereoSGBM> sgbm = StereoSGBM::create(0, 16, 3);
 
-    if( extrinsic_filename.empty() && !point_cloud_filename.empty() )
-    {
-        printf("Command-line parameter error: extrinsic and intrinsic parameters must be specified to compute the point cloud\n");
-        return -1;
-    }
+    numberOfDisparities = 0;
+    SADWindowSize = 0; 
+    scale = 1;
+    no_display = 0;
 
     int color_mode = alg == STEREO_BM ? 0 : -1;
     Mat img1 = imread(img1_filename, color_mode);
@@ -267,6 +200,20 @@ int main(int argc, char** argv)
         imshow("right", img2);
         namedWindow("disparity", 0);
         imshow("disparity", disp8);
+/*		for (int i = 1; i < 480; i++) {
+			for (int j = 1; j < 640; j++) {
+				float dis = disp8.at<float>(i, j);
+				printf("%d", dis);
+				printf(" ");
+			}
+			printf("\n");
+		}
+		printf("\n");
+		int rows = disp8.rows;
+		int cols = disp8.cols;
+		printf("%d", rows);
+		printf("%d", cols);
+		printf("\n"); */
         printf("press any key to continue...");
         fflush(stdout);
         waitKey();
